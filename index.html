@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Lessons Access</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  color: #fff;
+  position: relative;
+}
+
+/* Cards */
+.card { padding: 25px 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(255,255,255,0.3); animation: fadeIn 1s ease-in-out; text-align: center; max-width: 400px; width: 100%; }
+.card-active { background: rgba(255,255,255,0.1); }
+.card-inactive { 
+  background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+  color: #333;
+  border-radius: 20px;
+  padding: 25px 30px;
+  box-shadow: 0 0 25px rgba(255,255,255,0.3);
+  max-width: 400px;
+  width: 100%;
+  animation: fadeIn 1s ease-in-out;
+  text-align: center;
+}
+.btn-lg { min-width: 220px; font-weight: bold; }
+
+/* Background sparkles */
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: sparkleAnim linear infinite;
+}
+@keyframes sparkleAnim {
+  0% { transform: translateY(0) scale(1); opacity: 0.8; }
+  50% { transform: translateY(-20px) scale(1.5); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 0.8; }
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px);} to { opacity: 1; transform: translateY(0);} }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Active subscription card -->
+  <div class="card card-active" v-if="isActive">
+    <h2>🎓 Welcome back, {{ user.username }}!</h2>
+    <p>✅ Your subscription is active.<br>Start learning now!</p>
+    <a :href="lessonLink + '?user=' + user.telegramid" class="btn btn-primary btn-lg">Start Learning</a>
+  </div>
+
+  <!-- Inactive subscription card -->
+  <div class="card card-inactive" v-else>
+    <h2>👋 Hello, {{ user.username }}!</h2>
+    <p>Your balance: <strong>{{ user.balance.toFixed(2) }} LKR</strong></p>
+    <p>Subscription cost: <strong>500 LKR / 30 days</strong></p>
+    <a :href="subscribeLink" target="_blank" class="btn btn-warning btn-lg">
+      Top Up / Subscribe
+    </a>
+  </div>
+
+  <!-- Background sparkles for inactive users -->
+  <div v-for="spark in sparkles" v-if="!isActive" :key="spark.id" 
+       class="sparkle" 
+       :style="{ top: spark.top + 'px', left: spark.left + 'px', backgroundColor: spark.color, animationDuration: spark.duration + 's' }">
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.min.js"></script>
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      user: { username: '', balance: 0, telegramid: '' },
+      subscribeLink: 'https://t.me/GramAura_bot?start=ref123',
+      lessonLink: 'https://spin.tiiny.site',
+      sparkles: []
+    };
+  },
+  computed: {
+    isActive() { return this.user.balance >= 500; }
+  },
+  methods: {
+    fetchUserData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const syncUrl = urlParams.get("syncUserDataUrl");
+      if (!syncUrl) return;
+      fetch(syncUrl)
+        .then(res => res.json())
+        .then(data => { this.user = data.user; })
+        .catch(err => console.error("Error fetching user data:", err));
+    },
+    generateSparkles() {
+      const colors = ['#fff', '#ff0', '#f0f', '#0ff'];
+      for (let i = 0; i < 50; i++) {
+        this.sparkles.push({
+          id: i,
+          top: Math.random() * window.innerHeight,
+          left: Math.random() * window.innerWidth,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          duration: 2 + Math.random() * 2
+        });
+      }
+    }
+  },
+  mounted() {
+    this.fetchUserData();
+    setInterval(this.fetchUserData, 5000);
+    this.generateSparkles();
+  }
+});
+
+app.mount('#app');
+</script>
+</body>
+</html>
